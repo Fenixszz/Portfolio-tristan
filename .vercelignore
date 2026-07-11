@@ -17,5 +17,3 @@ scratchpad/
 
 # symlinked node_modules (broken outside this machine)
 node_modules
-.vercel
-.env*
