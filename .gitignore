@@ -1,0 +1,19 @@
+# dependencies (symlinked locally, not needed — site is static)
+node_modules/
+
+# huge local effects library (5.8GB) — reference only, not part of the site
+effects - cópia/
+
+# local dev / screenshot output
+temporary screenshots/
+scratchpad/
+
+# OS junk
+.DS_Store
+**/.DS_Store
+
+# vercel
+.vercel/
+
+# symlinked node_modules (broken outside this machine)
+node_modules
