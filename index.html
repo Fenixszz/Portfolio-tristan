@@ -180,7 +180,7 @@ a-waves .a__line{fill:none;stroke:var(--secondary);stroke-width:1px}
 .wcard__media img{width:100%;height:100%;object-fit:cover;filter:saturate(.94) contrast(1.03)}
 .wcard__idx{position:absolute;top:.6rem;left:.6rem;z-index:2;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--bone);mix-blend-mode:difference}
 .wcard__play{position:absolute;inset:0;z-index:2;display:grid;place-items:center;opacity:0;transition:opacity .45s var(--e-expo)}
-.wcard[data-video]:hover .wcard__play{opacity:1}
+.wcard[data-video]:hover .wcard__play,.wcard[data-src]:hover .wcard__play{opacity:1}
 .wcard__play span{width:58px;height:58px;border:1px solid var(--bone);border-radius:50%;display:grid;place-items:center;background:rgba(20,0,0,.35)}
 .wcard__play span::after{content:"";border-left:13px solid var(--bone);border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:4px}
 .wcard__cap{display:flex;justify-content:space-between;gap:.6rem;padding:.6rem .3rem;font-family:var(--mono);font-weight:700;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--primary)}
@@ -202,7 +202,7 @@ a-waves .a__line{fill:none;stroke:var(--secondary);stroke-width:1px}
 .lightbox{position:fixed;inset:0;z-index:120;background:rgba(8,0,0,.94);display:none;place-items:center;padding:clamp(1rem,5vw,4rem)}
 .lightbox.open{display:grid}
 .lightbox__frame{position:relative;width:min(100%,1200px);aspect-ratio:16/9;background:#000;border:1px solid rgba(255,240,235,.2)}
-.lightbox__frame iframe{width:100%;height:100%;border:0}
+.lightbox__frame iframe,.lightbox__frame video{width:100%;height:100%;border:0;display:block;background:#000;object-fit:contain}
 .lightbox__close{position:absolute;top:-2.6rem;right:0;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cream);cursor:pointer}
 .lightbox__close:hover{color:var(--red)}
 
@@ -358,9 +358,9 @@ a-waves .a__line{fill:none;stroke:var(--secondary);stroke-width:1px}
             <div class="wcard__media"><span class="wcard__idx">#IWG-still</span><img src="fotos/03_i_wont_go_home_without_you.jpg" alt="Frame do videoclipe" /></div>
             <div class="wcard__cap"><span>I Won’t Go Home…</span><span class="k">Still · ’26</span></div>
           </article>
-          <article class="wcard" style="--size:.9;--y:.2">
-            <div class="wcard__media"><span class="wcard__idx">#JD-0003</span><img src="fotos/04_jornada_dupla.jpg" alt="Still de Jornada Dupla" /></div>
-            <div class="wcard__cap"><span>Jornada Dupla</span><span class="k">Curta · Ator/Prod.</span></div>
+          <article class="wcard" style="--size:.9;--y:.2" data-src="videos/jornada-dupla.mp4">
+            <div class="wcard__media"><span class="wcard__idx">#JD-0003</span><img src="fotos/04_jornada_dupla.jpg" alt="Still de Jornada Dupla" /><div class="wcard__play"><span></span></div></div>
+            <div class="wcard__cap"><span>Jornada Dupla</span><span class="k">Curta · Ator/Prod. ▶</span></div>
           </article>
           <article class="wcard" style="--size:.72;--y:-.05">
             <div class="wcard__media"><span class="wcard__idx">#TK-set</span><img src="fotos/01_tristan_retrato_hero.jpg" alt="Retrato de set" /></div>
@@ -438,7 +438,8 @@ a-waves .a__line{fill:none;stroke:var(--secondary);stroke-width:1px}
 <div class="lightbox" id="lightbox" aria-hidden="true">
   <div class="lightbox__frame">
     <span class="lightbox__close" id="lightboxClose">Fechar ✕</span>
-    <iframe id="lightboxIframe" src="" title="Vídeo" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+    <iframe id="lightboxIframe" src="" title="Vídeo" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="display:none"></iframe>
+    <video id="lightboxVideo" controls playsinline preload="none" style="display:none"></video>
   </div>
 </div>
 
@@ -703,10 +704,13 @@ a-waves .a__line{fill:none;stroke:var(--secondary);stroke-width:1px}
 
   /* ---------- video lightbox ---------- */
   function initLightbox(){
-    const lb=$("#lightbox"),iframe=$("#lightboxIframe"),close=$("#lightboxClose");if(!lb)return;
-    function open(id){iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;lb.classList.add("open");lb.setAttribute("aria-hidden","false");if(lenis)lenis.stop();}
-    function shut(){lb.classList.remove("open");lb.setAttribute("aria-hidden","true");iframe.src="";if(lenis)lenis.start();}
-    $$(".wcard[data-video]").forEach(c=>{c.addEventListener("click",()=>open(c.dataset.video));});
+    const lb=$("#lightbox"),iframe=$("#lightboxIframe"),video=$("#lightboxVideo"),close=$("#lightboxClose");if(!lb)return;
+    function show(){lb.classList.add("open");lb.setAttribute("aria-hidden","false");if(lenis)lenis.stop();}
+    function openYT(id){video.style.display="none";iframe.style.display="";iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;show();}
+    function openLocal(src){iframe.style.display="none";iframe.src="";video.style.display="";video.src=src;show();video.play().catch(()=>{});}
+    function shut(){lb.classList.remove("open");lb.setAttribute("aria-hidden","true");iframe.src="";video.pause();video.removeAttribute("src");video.load();if(lenis)lenis.start();}
+    $$(".wcard[data-video]").forEach(c=>c.addEventListener("click",()=>openYT(c.dataset.video)));
+    $$(".wcard[data-src]").forEach(c=>c.addEventListener("click",()=>openLocal(c.dataset.src)));
     close.addEventListener("click",shut);
     lb.addEventListener("click",e=>{if(e.target===lb)shut();});
     addEventListener("keydown",e=>{if(e.key==="Escape"&&lb.classList.contains("open"))shut();});
