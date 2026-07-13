@@ -588,15 +588,17 @@ a-waves .a__line{fill:none;stroke:var(--secondary);stroke-width:1px}
   }
 
   /* ---------- hero reveal (drawSVG waves + content) ---------- */
+  // plays right AFTER the intro logo leaves — the hero is hidden until now
   function heroReveal(){
     const waves=$("a-waves");
-    const lines=$$(".js-line",waves);
-    const tl=gsap.timeline();
-    if(lines.length){
-      tl.fromTo(lines,{drawSVG:"50% 50%"},{drawSVG:"0% 100%",duration:2.4,ease:"expo.out",stagger:{amount:.6,from:"edges"}},0);
-    }
-    tl.from(".hero__content",{clipPath:"inset(0 0 100% 0)",duration:1.1,ease:"expo.inOut"},.3);
-    tl.add(()=>{ if(waves&&waves.setInteractive)waves.setInteractive(true); },"-=1");
+    const tl=gsap.timeline({onComplete:()=>{
+      if(waves&&waves.setInteractive)waves.setInteractive(true);
+      try{initHeroHide();}catch(e){}   // create the scroll-hide pin only once hero is fully shown
+      ScrollTrigger.refresh();
+    }});
+    tl.fromTo(waves,{opacity:0,scale:1.12},{opacity:1,scale:1,duration:1.6,ease:"expo.out"},0);
+    tl.fromTo(".hero__content",{opacity:0,clipPath:"inset(100% 0 0 0)"},{opacity:1,clipPath:"inset(0% 0 0 0)",duration:1.15,ease:"expo.inOut"},.15);
+    tl.from(".hero__title",{scale:.94,transformOrigin:"50% 100%",duration:1.3,ease:"expo.out"},.3);
   }
 
   /* ---------- scroll reveals ---------- */
@@ -745,11 +747,13 @@ a-waves .a__line{fill:none;stroke:var(--secondary);stroke-width:1px}
 
     initHeroChars();
     initNav(); initTC(lenis); initReveals(); initTilt();
-    try{initHeroHide();}catch(e){}
     try{initReel();}catch(e){}
     try{initReelFx();}catch(e){}
     gsap.ticker.add(flipTick);
-    runIntro(()=>{ heroReveal(); ScrollTrigger.refresh(); });
+    // keep the hero hidden behind the intro so it clearly animates IN once the logo leaves
+    gsap.set("a-waves",{opacity:0});
+    gsap.set(".hero__content",{opacity:0,clipPath:"inset(100% 0 0 0)"});
+    runIntro(()=>{ heroReveal(); });
   }
 
   if(document.readyState==="complete")boot();
